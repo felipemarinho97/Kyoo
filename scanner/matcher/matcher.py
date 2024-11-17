@@ -1,4 +1,5 @@
 from datetime import timedelta
+import os
 from typing import Literal, Optional
 import asyncio
 from logging import getLogger
@@ -8,6 +9,7 @@ from providers.types.show import Show
 from providers.types.episode import Episode, PartialShow
 from providers.types.season import Season
 from providers.kyoo_client import KyooClient
+from scanner.matcher.parser.nfo import NFOParser
 from .parser.guess import guessit
 from .cache import cache, exec_as_cache, make_key
 
@@ -52,20 +54,26 @@ class Matcher:
 		if "mimetype" not in raw or not raw["mimetype"].startswith("video"):
 			return
 
-		logger.info("Identied %s: %s", path, raw)
+		logger.info("Identified %s: %s", path, raw)
+
+		nfo_path = self._find_nfo_file(path)
+		nfo_metadata = NFOParser.parse_nfo(nfo_path) if nfo_path else None
+		if nfo_metadata:
+			logger.info("Found NFO metadata: %s", nfo_metadata)
 
 		title = raw.get("title")
-		if not isinstance(title, str):
+		if not isinstance(title, str) and not nfo_metadata:
 			raise ProviderError(f"Could not guess title, found: {title}")
 
 		year = raw.get("year")
 		if year is not None and not isinstance(year, int):
 			year = None
-			logger.warn(f"Invalid year value. Found {year}. Ignoring")
+			logger.warning(f"Invalid year value. Found {year}. Ignoring")
 
-		if raw["type"] == "movie":
-			await self.search_movie(title, year, path)
-		elif raw["type"] == "episode":
+		if raw["type"] == "movie" or (nfo_metadata and nfo_metadata["type"] == "movie"):
+			uniqueids = nfo_metadata["uniqueids"] if nfo_metadata else None
+			await self.search_movie(title or nfo_metadata["title"], year, path, uniqueids)
+		elif raw["type"] == "episode" or (nfo_metadata and nfo_metadata["type"] == "episodedetails"):
 			season = raw.get("season")
 			if isinstance(season, list):
 				raise ProviderError(
@@ -81,12 +89,29 @@ class Matcher:
 			if not isinstance(episode, int):
 				raise ProviderError(f"Could not guess episode, found: {episode}")
 
-			await self.search_episode(title, year, season, episode, path)
+			uniqueids = nfo_metadata["uniqueids"] if nfo_metadata else None
+			await self.search_episode(
+				title or nfo_metadata["title"], year, season, episode, path, uniqueids
+			)
 		else:
-			logger.warn("Unknown video file type: %s", raw["type"])
+			logger.warning("Unknown video file type: %s", raw["type"])
 
-	async def search_movie(self, title: str, year: Optional[int], path: str):
-		movie = await self._provider.search_movie(title, year)
+	def _find_nfo_file(self, path: str) -> Optional[str]:
+		"""Find the corresponding NFO file for a given video file."""
+		base_dir, base_name = os.path.split(path)
+		name_without_ext = os.path.splitext(base_name)[0]
+		potential_nfo_files = [
+			os.path.join(base_dir, f"{name_without_ext}.nfo"),
+			os.path.join(base_dir, "movie.nfo"),
+			os.path.join(base_dir, "tvshow.nfo"),
+		]
+		for nfo_file in potential_nfo_files:
+			if os.path.exists(nfo_file):
+				return nfo_file
+		return None
+
+	async def search_movie(self, title: str, year: Optional[int], path: str, uniqueids: Optional[dict] = None):
+		movie = await self._provider.search_movie(title, year, uniqueids)
 		movie.file_title = title
 		movie.path = path
 		logger.debug("Got movie: %s", movie)
@@ -107,6 +132,7 @@ class Matcher:
 		season: Optional[int],
 		episode_nbr: int,
 		path: str,
+		uniqueids: Optional[dict] = None,
 	):
 		episode = await self._provider.search_episode(
 			title,
@@ -114,6 +140,7 @@ class Matcher:
 			episode_nbr=episode_nbr if season is not None else None,
 			absolute=episode_nbr if season is None else None,
 			year=year,
+			uniqueids=uniqueids,
 		)
 		episode.path = path
 		logger.debug("Got episode: %s", episode)
@@ -124,6 +151,7 @@ class Matcher:
 				episode.show, episode.show_id, episode.season_number
 			)
 		await self._client.post("episodes", data=episode.to_kyoo())
+
 
 	async def create_or_get_collection(self, collection: Collection) -> str:
 		@cache(ttl=timedelta(days=1), cache=self._collection_cache)
