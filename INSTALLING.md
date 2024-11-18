@@ -130,3 +130,7 @@ To exclude `/media/extras/**`, add an `.ignore` file:
 touch /media/extras/.ignore
 ```
 Kyoo will skip `/media/extras` and its contents in all future scans and monitoring events.
+
+# OpenID Connect
+
+Kyoo supports OpenID Connect (OIDC) for authentication. Please refer to the [OIDC.md](OIDC.md) file for more information.
