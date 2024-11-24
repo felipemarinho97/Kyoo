@@ -23,37 +23,37 @@ jobs:
           - context: ./back
             dockerfile: Dockerfile
             label: back
-            image: zoriya/kyoo_back
+            image: felipemarinho97/kyoo_back
 
           - context: ./back
             dockerfile: Dockerfile.migrations
             label: migrations
-            image: zoriya/kyoo_migrations
+            image: felipemarinho97/kyoo_migrations
 
           - context: ./front
             dockerfile: Dockerfile
             label: front
-            image: zoriya/kyoo_front
+            image: felipemarinho97/kyoo_front
 
           - context: ./scanner
             dockerfile: Dockerfile
             label: scanner
-            image: zoriya/kyoo_scanner
+            image: felipemarinho97/kyoo_scanner
 
           - context: ./autosync
             dockerfile: Dockerfile
             label: autosync
-            image: zoriya/kyoo_autosync
+            image: felipemarinho97/kyoo_autosync
 
           - context: ./transcoder
             dockerfile: Dockerfile
             label: transcoder
-            image: zoriya/kyoo_transcoder
+            image: felipemarinho97/kyoo_transcoder
 
           - context: ./auth
             dockerfile: Dockerfile
             label: auth
-            image: zoriya/keibi
+            image: felipemarinho97/keibi
     name: Build ${{matrix.label}}
     steps:
       - uses: actions/checkout@v4
