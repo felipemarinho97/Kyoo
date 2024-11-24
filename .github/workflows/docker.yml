@@ -2,16 +2,17 @@ name: Docker
 on:
   push:
     branches:
-      - master
+      - darklyn_tv
       - next
     tags:
       - v*
   pull_request:
   workflow_dispatch:
 
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: write
@@ -22,37 +23,37 @@ jobs:
           - context: ./back
             dockerfile: Dockerfile
             label: back
-            image: zoriya/kyoo_back
+            image: felipemarinho97/kyoo_back
 
           - context: ./back
             dockerfile: Dockerfile.migrations
             label: migrations
-            image: zoriya/kyoo_migrations
+            image: felipemarinho97/kyoo_migrations
 
           - context: ./front
             dockerfile: Dockerfile
             label: front
-            image: zoriya/kyoo_front
+            image: felipemarinho97/kyoo_front
 
           - context: ./scanner
             dockerfile: Dockerfile
             label: scanner
-            image: zoriya/kyoo_scanner
+            image: felipemarinho97/kyoo_scanner
 
           - context: ./autosync
             dockerfile: Dockerfile
             label: autosync
-            image: zoriya/kyoo_autosync
+            image: felipemarinho97/kyoo_autosync
 
           - context: ./transcoder
             dockerfile: Dockerfile
             label: transcoder
-            image: zoriya/kyoo_transcoder
+            image: felipemarinho97/kyoo_transcoder
 
           - context: ./auth
             dockerfile: Dockerfile
             label: auth
-            image: zoriya/keibi
+            image: felipemarinho97/keibi
     name: Build ${{matrix.label}}
     steps:
       - uses: actions/checkout@v4
@@ -80,7 +81,7 @@ jobs:
 
       - name: Check if a package should be pushed
         run: |
-          echo "SHOULD_PUSH=$([ "${GITHUB_REF##*/}" == "master" ] || [ "${GITHUB_REF##*/}" == "next" ] || [ "${GITHUB_REF_TYPE}" == "tag" ] && echo "true" || echo "false")" >> $GITHUB_ENV
+          echo "SHOULD_PUSH=$([ "${GITHUB_REF##*/}" == "darklyn_tv" ] || [ "${GITHUB_REF##*/}" == "next" ] || [ "${GITHUB_REF_TYPE}" == "tag" ] && echo "true" || echo "false")" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

@@ -2,7 +2,7 @@ name: RobotTests
 on:
   push:
     branches:
-      - master
+      - darklyn_tv
       - next
   pull_request:
 
@@ -10,7 +10,7 @@ on:
 jobs:
   test:
     name: Robot tests Auth
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     services:
       postgres:
         image: postgres:15

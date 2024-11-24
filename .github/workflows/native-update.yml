@@ -4,10 +4,11 @@ on:
     tags:
       - v*
 
+
 jobs:
   update:
     name: Expo Update
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: ./front
