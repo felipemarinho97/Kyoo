@@ -3,12 +3,12 @@ on:
   push:
     tags:
      - v*
-runs-on: self-hosted
+
 
 jobs:
   update:
     name: Release
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
