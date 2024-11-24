@@ -5,7 +5,7 @@ on:
       - darklyn_tv
       - next
   pull_request:
-
+runs-on: self-hosted
 
 jobs:
   test:

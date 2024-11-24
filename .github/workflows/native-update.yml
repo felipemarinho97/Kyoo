@@ -3,6 +3,7 @@ on:
   push:
     tags:
       - v*
+runs-on: self-hosted
 
 jobs:
   update:
