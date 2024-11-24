@@ -114,12 +114,16 @@ class TVDB(Provider):
 		return "tvdb"
 
 	@cache(ttl=timedelta(days=1))
-	async def search_show(self, name: str, year: Optional[int]) -> str:
+	async def search_show(self, name: str, year: Optional[int], episode_id: Optional[str] = None) -> str:
 		query = OrderedDict(
 			query=name,
 			year=year,
 			type="series",
 		)
+		if episode_id is not None:
+			episode_info = await self.get(f"episodes/{episode_id}")
+			return episode_info["data"]["seriesId"]
+
 		ret = await self.get(f"search?{urlencode(query)}")
 		if not any(ret["data"]):
 			raise ProviderError(
@@ -136,14 +140,9 @@ class TVDB(Provider):
 		year: Optional[int],
 		uniqueids: Optional[dict] = None,
 	) -> Episode:
-		if uniqueids is not None:
-			logger.info("Searching episode with uniqueids: %s", uniqueids)
-			if "tvdb" in uniqueids:
-				return await self.identify_episode(
-					uniqueids["tvdb"], season, episode_nbr, absolute
-				)
-		show_id = await self.search_show(name, year)
-		return await self.identify_episode(show_id, season, episode_nbr, absolute)
+		episode_id = uniqueids.get("tvdb") if uniqueids is not None else None
+		show_id = await self.search_show(name, year, episode_id)
+		return await self.identify_episode(show_id, season, episode_nbr, absolute, episode_id)
 
 	@cache(ttl=timedelta(days=1))
 	async def get_episodes(
@@ -176,6 +175,7 @@ class TVDB(Provider):
 		season: Optional[int],
 		episode_nbr: Optional[int],
 		absolute: Optional[int],
+		episode_id: Optional[str] = None,
 	) -> Episode:
 		translations = await asyncio.gather(
 			*(self.get_episodes(show_id, language=lang) for lang in self._languages)
@@ -186,6 +186,9 @@ class TVDB(Provider):
 
 		ret = next(
 			filter(
+				(lambda x: x["id"] == episode_id)
+				if episode_id is not None
+				else
 				(lambda x: x["seasonNumber"] == 1 and x["number"] == absolute)
 				if absolute is not None
 				else (

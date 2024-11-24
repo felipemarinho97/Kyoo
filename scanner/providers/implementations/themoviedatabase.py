@@ -200,7 +200,7 @@ class TheMovieDatabase(Provider):
 		self, name: str, year: Optional[int], uniqueids: Optional[dict] = None
 	) -> Movie:
 		if uniqueids:
-			logger.debug("Searching for movie with uniqueids: %s", uniqueids)
+			logger.info("Searching for movie with uniqueids: %s", uniqueids)
 			if "tmdb" in uniqueids:
 				return await self.identify_movie(uniqueids["tmdb"])
 			elif "imdb" in uniqueids:
@@ -491,7 +491,7 @@ class TheMovieDatabase(Provider):
 		uniqueids: Optional[dict] = None,
 	) -> Episode:
 		if uniqueids:
-			logger.debug("Searching for episode with uniqueids: %s", uniqueids)
+			logger.info("Searching for episode with uniqueids: %s", uniqueids)
 			if "tmdb" in uniqueids:
 				return await self.identify_episode(
 					uniqueids["tmdb"], season, episode_nbr, absolute
