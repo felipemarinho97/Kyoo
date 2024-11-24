@@ -9,7 +9,7 @@ from providers.types.show import Show
 from providers.types.episode import Episode, PartialShow
 from providers.types.season import Season
 from providers.kyoo_client import KyooClient
-from scanner.matcher.parser.nfo import NFOParser
+from .parser.nfo import NFOParser
 from .parser.guess import guessit
 from .cache import cache, exec_as_cache, make_key
 
