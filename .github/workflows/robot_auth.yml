@@ -2,7 +2,7 @@ name: RobotTests
 on:
   push:
     branches:
-      - master
+      - darklyn_tv
       - next
   pull_request:
 
