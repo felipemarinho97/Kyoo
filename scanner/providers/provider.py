@@ -56,7 +56,9 @@ class Provider:
 		raise NotImplementedError
 
 	@abstractmethod
-	async def search_movie(self, name: str, year: Optional[int]) -> Movie:
+	async def search_movie(
+		self, name: str, year: Optional[int], uniqueids: Optional[dict] = None
+	) -> Movie:
 		raise NotImplementedError
 
 	@abstractmethod
@@ -67,6 +69,7 @@ class Provider:
 		episode_nbr: Optional[int],
 		absolute: Optional[int],
 		year: Optional[int],
+		uniqueids: Optional[dict] = None,
 	) -> Episode:
 		raise NotImplementedError
 

@@ -134,7 +134,14 @@ class TVDB(Provider):
 		episode_nbr: Optional[int],
 		absolute: Optional[int],
 		year: Optional[int],
+		uniqueids: Optional[dict] = None,
 	) -> Episode:
+		if uniqueids is not None:
+			logger.info("Searching episode with uniqueids: %s", uniqueids)
+			if "tvdb" in uniqueids:
+				return await self.identify_episode(
+					uniqueids["tvdb"].data_id, season, episode_nbr, absolute
+				)
 		show_id = await self.search_show(name, year)
 		return await self.identify_episode(show_id, season, episode_nbr, absolute)
 

@@ -178,8 +178,10 @@ class TheXem(Provider):
 	async def get_expected_titles(self) -> list[str]:
 		return await self._client.get_expected_titles()
 
-	async def search_movie(self, name: str, year: Optional[int]) -> Movie:
-		return await self._base.search_movie(name, year)
+	async def search_movie(
+		self, name: str, year: Optional[int], uniqueids: Optional[dict] = None
+	) -> Movie:
+		return await self._base.search_movie(name, year, uniqueids)
 
 	async def search_episode(
 		self,
@@ -188,6 +190,7 @@ class TheXem(Provider):
 		episode_nbr: Optional[int],
 		absolute: Optional[int],
 		year: Optional[int],
+		uniqueids: Optional[dict] = None,
 	) -> Episode:
 		"""
 		Handle weird season names overrides from thexem.
@@ -198,7 +201,7 @@ class TheXem(Provider):
 
 		if new_name is None:
 			return await self._base.search_episode(
-				name, season, episode_nbr, absolute, year
+				name, season, episode_nbr, absolute, year, uniqueids
 			)
 
 		if season is None and absolute is not None:
@@ -214,10 +217,10 @@ class TheXem(Provider):
 				# tvdb_season/episode are not in sync with tmdb so we discard those and use our usual absolute order fetching.
 				if self._base == "tvdb":
 					return await self._base.search_episode(
-						new_name, tvdb_season, tvdb_episode, absolute, year
+						new_name, tvdb_season, tvdb_episode, absolute, year, uniqueids
 					)
 		return await self._base.search_episode(
-			new_name, season, episode_nbr, absolute, year
+			new_name, season, episode_nbr, absolute, year, uniqueids
 		)
 
 	async def identify_movie(self, movie_id: str) -> Movie:
