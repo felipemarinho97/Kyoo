@@ -86,7 +86,7 @@ class Matcher:
 				raise ProviderError(
 					f"Multi-episodes files are not yet supported (for {path})"
 				)
-			if not isinstance(episode, int):
+			if not isinstance(episode, int) and not nfo_metadata:
 				raise ProviderError(f"Could not guess episode, found: {episode}")
 
 			uniqueids = nfo_metadata["uniqueids"] if nfo_metadata else None
