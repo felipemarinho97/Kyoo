@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 
@@ -223,6 +224,9 @@ func (s *MetadataService) storeFreshMetadata(path string, sha string) (*MediaInf
 	}
 
 	tx, err := s.database.Begin()
+	if err != nil {
+		return set(nil, err)
+	}
 	// it needs to be a delete instead of a on conflict do update because we want to trigger delete casquade for
 	// videos/audios & co.
 	tx.Exec(`delete from info where path = $1`, path)
@@ -236,7 +240,7 @@ func (s *MetadataService) storeFreshMetadata(path string, sha string) (*MediaInf
 		pq.Array(ret.Fonts), ret.Versions.Info, ret.Versions.Extract, ret.Versions.Thumbs, ret.Versions.Keyframes,
 	)
 	for _, v := range ret.Videos {
-		tx.Exec(`
+		_, err := tx.Exec(`
 			insert into videos(sha, idx, title, language, codec, mime_codec, width, height, is_default, bitrate)
 			values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 			on conflict (sha, idx) do update set
@@ -253,9 +257,12 @@ func (s *MetadataService) storeFreshMetadata(path string, sha string) (*MediaInf
 			`,
 			ret.Sha, v.Index, v.Title, v.Language, v.Codec, v.MimeCodec, v.Width, v.Height, v.IsDefault, v.Bitrate,
 		)
+		if err != nil {
+			log.Printf("could not insert video: %s. Video: %+v", err, v)
+		}
 	}
 	for _, a := range ret.Audios {
-		tx.Exec(`
+		_, err := tx.Exec(`
 			insert into audios(sha, idx, title, language, codec, mime_codec, is_default, bitrate)
 			values ($1, $2, $3, $4, $5, $6, $7, $8)
 			on conflict (sha, idx) do update set
@@ -270,9 +277,12 @@ func (s *MetadataService) storeFreshMetadata(path string, sha string) (*MediaInf
 			`,
 			ret.Sha, a.Index, a.Title, a.Language, a.Codec, a.MimeCodec, a.IsDefault, a.Bitrate,
 		)
+		if err != nil {
+			log.Printf("could not insert audio: %s. Audio: %+v", err, a)
+		}
 	}
 	for _, s := range ret.Subtitles {
-		tx.Exec(`
+		_, err := tx.Exec(`
 			insert into subtitles(sha, idx, title, language, codec, extension, is_default, is_forced)
 			values ($1, $2, $3, $4, $5, $6, $7, $8)
 			on conflict (sha, idx) do update set
@@ -287,9 +297,12 @@ func (s *MetadataService) storeFreshMetadata(path string, sha string) (*MediaInf
 			`,
 			ret.Sha, s.Index, s.Title, s.Language, s.Codec, s.Extension, s.IsDefault, s.IsForced,
 		)
+		if err != nil {
+			log.Printf("could not insert subtitle: %s. Subtitle: %+v", err, s)
+		}
 	}
 	for _, c := range ret.Chapters {
-		tx.Exec(`
+		_, err := tx.Exec(`
 			insert into chapters(sha, start_time, end_time, name, type)
 			values ($1, $2, $3, $4, $5)
 			on conflict (sha, start_time) do update set
@@ -301,6 +314,9 @@ func (s *MetadataService) storeFreshMetadata(path string, sha string) (*MediaInf
 			`,
 			ret.Sha, c.StartTime, c.EndTime, c.Name, c.Type,
 		)
+		if err != nil {
+			log.Printf("could not insert chapter: %s. Chapter: %+v", err, c)
+		}
 	}
 	err = tx.Commit()
 	if err != nil {
