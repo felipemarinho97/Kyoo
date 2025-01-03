@@ -52,6 +52,7 @@ class Matcher:
 		raw = guessit(path, xem_titles=await self._provider.get_expected_titles())
 
 		if "mimetype" not in raw or not raw["mimetype"].startswith("video"):
+			logger.warning("Ignoring non-video file: %s. Mimetype: %s", path, raw.get("mimetype"))
 			return
 
 		logger.info("Identified %s: %s", path, raw)
