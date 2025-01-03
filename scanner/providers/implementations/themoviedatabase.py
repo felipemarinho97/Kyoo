@@ -196,7 +196,21 @@ class TheMovieDatabase(Provider):
 
 		return []
 
-	async def search_movie(self, name: str, year: Optional[int]) -> Movie:
+	async def search_movie(
+		self, name: str, year: Optional[int], uniqueids: Optional[dict] = None
+	) -> Movie:
+		if uniqueids:
+			logger.info("Searching for movie with uniqueids: %s", uniqueids)
+			if "tmdb" in uniqueids:
+				return await self.identify_movie(uniqueids["tmdb"])
+			elif "imdb" in uniqueids:
+				movie = await self.get(
+					f"find/{uniqueids['imdb']}",
+					params={"external_source": "imdb_id"},
+				)
+				if movie["movie_results"]:
+					return await self.identify_movie(movie["movie_results"][0]["id"])
+
 		search_results = (
 			await self.get("search/movie", params={"query": name, "year": year})
 		)["results"]
@@ -474,7 +488,23 @@ class TheMovieDatabase(Provider):
 		episode_nbr: Optional[int],
 		absolute: Optional[int],
 		year: Optional[int],
+		uniqueids: Optional[dict] = None,
 	) -> Episode:
+		if uniqueids:
+			logger.info("Searching for episode with uniqueids: %s", uniqueids)
+			if "tmdb" in uniqueids:
+				return await self.identify_episode(
+					uniqueids["tmdb"], season, episode_nbr, absolute
+				)
+			elif "imdb" in uniqueids:
+				episode = await self.get(
+					f"find/{uniqueids['imdb']}",
+					params={"external_source": "imdb_id"},
+				)
+				if episode["tv_episode_results"]:
+					return await self.identify_episode(
+						episode["tv_episode_results"][0]["id"], season, episode_nbr, absolute
+					)
 		show = await self.search_show(name, year)
 		show_id = show.external_id[self.name].data_id
 

@@ -1,8 +1,8 @@
-FROM python:3.12
+FROM python:3.12-slim
 WORKDIR /app
 
 COPY ./requirements.txt .
-RUN pip3 install -r ./requirements.txt
+RUN apt update && apt install -y git && pip3 install --no-cache-dir -r ./requirements.txt
 
 COPY . .
 ENTRYPOINT ["python3", "-m"]
