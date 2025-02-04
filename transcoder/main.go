@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/zoriya/kyoo/transcoder/src"
+	"github.com/zoriya/kyoo/transcoder/src/storage"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -147,6 +149,10 @@ func (h *Handler) GetVideoSegment(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	if redirectURL, err := h.storage.GetObjectURL(ret); err != nil {
+		return c.Redirect(http.StatusFound, redirectURL)
+	}
+
 	return c.File(ret)
 }
 
@@ -286,6 +292,7 @@ func (h *Handler) GetThumbnailsVtt(c echo.Context) error {
 type Handler struct {
 	transcoder *src.Transcoder
 	metadata   *src.MetadataService
+	storage    *storage.Client
 }
 
 func main() {
@@ -303,9 +310,11 @@ func main() {
 		e.Logger.Fatal(err)
 		return
 	}
+	_storage := storage.NewClient(os.Getenv("STORAGE_URL"))
 	h := Handler{
 		transcoder: transcoder,
 		metadata:   metadata,
+		storage:    _storage,
 	}
 
 	g := e.Group(src.Settings.RoutePrefix)
