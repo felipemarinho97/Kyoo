@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 // Client represents a client to the storage service API.
@@ -17,8 +18,10 @@ type Client struct {
 // NewClient creates a new Client with the given base URL.
 func NewClient(baseURL string) *Client {
 	return &Client{
-		BaseURL:    baseURL,
-		HTTPClient: &http.Client{},
+		BaseURL: baseURL,
+		HTTPClient: &http.Client{
+			Timeout: 5000 * time.Millisecond,
+		},
 	}
 }
 

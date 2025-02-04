@@ -149,8 +149,10 @@ func (h *Handler) GetVideoSegment(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if redirectURL, err := h.storage.GetObjectURL(ret); err != nil {
+	if redirectURL, err := h.storage.GetObjectURL(ret); err == nil {
 		return c.Redirect(http.StatusFound, redirectURL)
+	} else {
+		fmt.Printf("Failed to get object URL: %v", err)
 	}
 
 	return c.File(ret)
