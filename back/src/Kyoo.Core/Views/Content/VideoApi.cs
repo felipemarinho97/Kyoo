@@ -56,6 +56,10 @@ public class VideoApi : Controller
 					);
 				}
 			)
+			.WithHttpClientOptions(httpClientOptions =>
+			{
+				httpClientOptions.AllowAutoRedirect = false;
+			})
 			.Build();
 		return this.HttpProxyAsync($"{TranscoderUrl}/{route}", proxyOptions);
 	}
