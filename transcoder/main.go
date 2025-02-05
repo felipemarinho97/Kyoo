@@ -151,7 +151,7 @@ func (h *Handler) GetVideoSegment(c echo.Context) error {
 		return err
 	}
 
-	key := strings.Replace(ret, os.Getenv("GOCODER_CACHE_ROOT"), "", 1)
+	key := strings.Replace(ret, "/", "_", -1)
 	if redirectURL, err := h.storage.GetObjectURL(key); err == nil {
 		return c.Redirect(http.StatusFound, redirectURL)
 	} else {

@@ -316,7 +316,7 @@ func (ts *Stream) run(start int32) error {
 			ts.lock.Lock()
 			ts.heads[encoder_id].segment = segment
 			log.Printf("Segment %d got ready (%d)", segment, encoder_id)
-			go uploadSegment(ts.handle.getOutPath(encoder_id))
+			go uploadSegment(fmt.Sprintf(ts.handle.getOutPath(encoder_id), segment))
 
 			if ts.isSegmentReady(segment) {
 				// the current segment is already marked at done so another process has already gone up to here.
@@ -372,8 +372,9 @@ func uploadSegment(path string) {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		log.Printf("Failed to read %s: %v", path, err)
+		return
 	}
-	err = storageClient.UploadObject(path, b)
+	err = storageClient.UploadObject(strings.Replace(path, "/", "_", -1), b)
 	if err != nil {
 		log.Printf("Failed to upload %s: %v", path, err)
 	}
