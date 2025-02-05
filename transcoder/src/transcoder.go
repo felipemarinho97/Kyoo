@@ -132,6 +132,25 @@ func (t *Transcoder) GetVideoSegment(
 	return stream.GetVideoSegment(video, quality, segment)
 }
 
+func (t *Transcoder) GetVideoSegmentKey(
+	path string,
+	video uint32,
+	quality Quality,
+	sha string,
+) (string, error) {
+	stream, err := t.getFileStream(path, sha)
+	if err != nil {
+		return "", err
+	}
+
+	vs, err := stream.getVideoStream(video, quality)
+	if err != nil {
+		return "", err
+	}
+
+	return vs.getOutPath(int(video)), nil
+}
+
 func (t *Transcoder) GetAudioSegment(
 	path string,
 	audio uint32,

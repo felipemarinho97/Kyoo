@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/zoriya/kyoo/transcoder/src"
 	"github.com/zoriya/kyoo/transcoder/src/storage"
@@ -149,7 +150,9 @@ func (h *Handler) GetVideoSegment(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if redirectURL, err := h.storage.GetObjectURL(ret); err == nil {
+
+	key := strings.Replace(ret, os.Getenv("GOCODER_CACHE_ROOT"), "", 1)
+	if redirectURL, err := h.storage.GetObjectURL(key); err == nil {
 		return c.Redirect(http.StatusFound, redirectURL)
 	} else {
 		fmt.Printf("Failed to get object URL: %v", err)

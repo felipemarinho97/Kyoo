@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/zoriya/kyoo/transcoder/src/storage"
 )
 
 type Flags int32
@@ -22,6 +24,8 @@ const (
 	VideoF   Flags = 1 << 1
 	Transmux Flags = 1 << 3
 )
+
+var storageClient = storage.NewClient(os.Getenv("STORAGE_URL"))
 
 type StreamHandle interface {
 	getTranscodeArgs(segments string) []string
@@ -312,6 +316,8 @@ func (ts *Stream) run(start int32) error {
 			ts.lock.Lock()
 			ts.heads[encoder_id].segment = segment
 			log.Printf("Segment %d got ready (%d)", segment, encoder_id)
+			go uploadSegment(ts.handle.getOutPath(encoder_id))
+
 			if ts.isSegmentReady(segment) {
 				// the current segment is already marked at done so another process has already gone up to here.
 				cmd.Process.Signal(os.Interrupt)
@@ -359,6 +365,18 @@ func (ts *Stream) run(start int32) error {
 	}()
 
 	return nil
+}
+
+func uploadSegment(path string) {
+	// ready bytes from path
+	b, err := os.ReadFile(path)
+	if err != nil {
+		log.Printf("Failed to read %s: %v", path, err)
+	}
+	err = storageClient.UploadObject(path, b)
+	if err != nil {
+		log.Printf("Failed to upload %s: %v", path, err)
+	}
 }
 
 func (ts *Stream) GetIndex() (string, error) {
