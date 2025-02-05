@@ -81,6 +81,8 @@ builder.ConfigureKyoo();
 builder.ConfigureAuthentication();
 builder.ConfigureMeilisearch();
 builder.ConfigureRabbitMq();
+builder.Services.AddHttpClient("transcoder").ConfigurePrimaryHttpMessageHandler(() =>
+    new HttpClientHandler() { AllowAutoRedirect = false });
 
 WebApplication app = builder.Build();
 CoreModule.Services = app.Services;
