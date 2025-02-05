@@ -59,16 +59,14 @@ func (c *Client) GetObjectURL(key string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusFound {
-		return "", fmt.Errorf("failed to get object URL with status: %s", resp.Status)
+	var result struct {
+		URL string `json:"url"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
 	}
 
-	location := resp.Header.Get("Location")
-	if location == "" {
-		return "", fmt.Errorf("no Location header in response")
-	}
-
-	return location, nil
+	return result.URL, nil
 }
 
 // ListObjects lists objects under the given prefix.

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -155,7 +156,7 @@ func (h *Handler) GetVideoSegment(c echo.Context) error {
 	if redirectURL, err := h.storage.GetObjectURL(key); err == nil {
 		return c.Redirect(http.StatusFound, redirectURL)
 	} else {
-		fmt.Printf("Failed to get object URL: %v", err)
+		log.Printf("Failed to get object URL: %v", err)
 	}
 
 	return c.File(ret)
