@@ -21,6 +21,10 @@ func NewClient(baseURL string) *Client {
 		BaseURL: baseURL,
 		HTTPClient: &http.Client{
 			Timeout: 5000 * time.Millisecond,
+			// Do not follow redirects
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
 		},
 	}
 }
