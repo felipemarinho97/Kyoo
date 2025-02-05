@@ -155,9 +155,9 @@ func (h *Handler) GetVideoSegment(c echo.Context) error {
 	key := strings.Replace(ret, "/", "_", -1)
 	if redirectURL, err := h.storage.GetObjectURL(key); err == nil {
 		return c.Redirect(http.StatusFound, redirectURL)
-	} else {
-		log.Printf("Failed to get object URL: %v", err)
 	}
+
+	log.Printf("[Fallback] Segment %s not found in storage, serving from local filesystem", ret)
 
 	return c.File(ret)
 }
@@ -189,6 +189,14 @@ func (h *Handler) GetAudioSegment(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	key := strings.Replace(ret, "/", "_", -1)
+	if redirectURL, err := h.storage.GetObjectURL(key); err == nil {
+		return c.Redirect(http.StatusFound, redirectURL)
+	}
+
+	log.Printf("[Fallback] Segment %s not found in storage, serving from local filesystem", ret)
+
 	return c.File(ret)
 }
 

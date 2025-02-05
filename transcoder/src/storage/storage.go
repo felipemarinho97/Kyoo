@@ -59,6 +59,10 @@ func (c *Client) GetObjectURL(key string) (string, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("get object URL failed with status: %s", resp.Status)
+	}
+
 	var result struct {
 		URL string `json:"url"`
 	}
