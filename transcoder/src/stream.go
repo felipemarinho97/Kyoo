@@ -27,6 +27,40 @@ const (
 
 var storageClient = storage.NewClient(os.Getenv("STORAGE_URL"))
 
+var (
+	uploadQueue chan string
+	uploadOnce  sync.Once
+)
+
+// initUploadQueue initializes a buffered channel and starts 5 worker goroutines.
+func initUploadQueue() {
+	uploadQueue = make(chan string, 100) // buffer size is arbitrary.
+	for i := 0; i < 5; i++ {
+		go func(workerID int) {
+			for path := range uploadQueue {
+				log.Printf("Worker %d: Uploading segment %s", workerID, path)
+				b, err := os.ReadFile(path)
+				if err != nil {
+					log.Printf("Failed to read %s: %v", path, err)
+					continue
+				}
+				err = storageClient.UploadObject(strings.ReplaceAll(path, "/", "_"), b)
+				if err != nil {
+					log.Printf("Failed to upload %s: %v", path, err)
+				} else {
+					log.Printf("Successfully uploaded segment %s", path)
+				}
+			}
+		}(i)
+	}
+}
+
+// uploadSegment now simply sends the path to the uploadQueue.
+func uploadSegment(path string) {
+	uploadOnce.Do(initUploadQueue)
+	uploadQueue <- path
+}
+
 type StreamHandle interface {
 	getTranscodeArgs(segments string) []string
 	getOutPath(encoder_id int) string
@@ -365,19 +399,6 @@ func (ts *Stream) run(start int32) error {
 	}()
 
 	return nil
-}
-
-func uploadSegment(path string) {
-	// ready bytes from path
-	b, err := os.ReadFile(path)
-	if err != nil {
-		log.Printf("Failed to read %s: %v", path, err)
-		return
-	}
-	err = storageClient.UploadObject(strings.Replace(path, "/", "_", -1), b)
-	if err != nil {
-		log.Printf("Failed to upload %s: %v", path, err)
-	}
 }
 
 func (ts *Stream) GetIndex() (string, error) {
