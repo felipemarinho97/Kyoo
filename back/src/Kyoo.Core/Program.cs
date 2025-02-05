@@ -17,6 +17,7 @@
 // along with Kyoo. If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Net.Http;
 using Kyoo.Authentication;
 using Kyoo.Core;
 using Kyoo.Core.Controllers;

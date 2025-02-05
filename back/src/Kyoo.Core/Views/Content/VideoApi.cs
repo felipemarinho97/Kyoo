@@ -59,9 +59,11 @@ public class VideoApi : Controller
 			.WithHttpClientName("transcoder")
 			.WithAfterReceive((ctx, resp) => {
 				if (resp.Headers.Contains("Location")) {
-					var relUri = destUri.MakeRelativeUri(resp.Headers.Location);
-					if (!relUri.IsAbsoluteUri) {
-						resp.Headers.Location = new Uri(ourUrli, relUri);
+					var ourUri = new Uri(ctx.Request.Scheme + "://" + ctx.Request.Host.Value);
+					var destUri = new Uri(resp.Headers.Location.ToString());
+
+					if (!destUri.IsAbsoluteUri) {
+						resp.Headers.Location = new Uri(ourUri, destUri);
 					}
 				}
 				return Task.CompletedTask;
