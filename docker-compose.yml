@@ -184,8 +184,34 @@ services:
       retries: 5
       start_period: 10s
 
+   minio:
+    image: minio/minio
+    ports:
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+
+    command: server /data --console-address ":9001"
+    volumes:
+      - storage:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=PathPrefix(`/storage/`)"
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
+      # remove Authorization header from the request
+      - "traefik.http.middlewares.minio-auth.removeheader.headers.Authorization=true"
+
+
 volumes:
   kyoo:
   db:
   metadata:
   search:
+  storage:
